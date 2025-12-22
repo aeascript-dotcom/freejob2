@@ -1,0 +1,301 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Prompt', sans-serif;
+    background: #000;
+    min-height: 100vh;
+    padding: 0;
+    margin: 0;
+    overflow-x: hidden;
+}
+
+.container {
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    background: #000;
+    position: relative;
+    padding-bottom: 2rem;
+}
+
+@media (max-width: 480px) {
+    .container {
+        max-width: 100%;
+    }
+}
+
+/* Header */
+.header {
+    background: linear-gradient(90deg, #c0c0c0 0%, #e0e0e0 50%, #c0c0c0 100%);
+    color: #008B8B;
+    padding: 1.5rem;
+    text-align: center;
+    margin: 1.5rem 1rem;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+
+/* Date Selector */
+.date-selector {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+    padding: 0 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.date-btn {
+    aspect-ratio: 1;
+    background: linear-gradient(135deg, #b0b0b0 0%, #d0d0d0 100%);
+    border: none;
+    border-radius: 50%;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+    font-family: 'Prompt', sans-serif;
+}
+
+.date-btn:hover {
+    transform: scale(1.1);
+    background: linear-gradient(135deg, #008B8B 0%, #20B2AA 100%);
+    color: white;
+}
+
+.date-btn.active {
+    background: linear-gradient(135deg, #008B8B 0%, #20B2AA 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 139, 139, 0.5);
+    transform: scale(1.05);
+}
+
+.date-btn.disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Loading */
+.loading {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: white;
+}
+
+.spinner {
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top: 4px solid #008B8B;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Error */
+.error {
+    text-align: center;
+    padding: 2rem 1.5rem;
+    color: #ff6b6b;
+}
+
+.error button {
+    margin-top: 1rem;
+    padding: 0.75rem 2rem;
+    background: #008B8B;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    cursor: pointer;
+    font-family: 'Prompt', sans-serif;
+}
+
+/* Activities */
+.activities {
+    padding: 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+/* Activity Card */
+.activity-card {
+    position: relative;
+    border-radius: 25px;
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1);
+    animation: fadeIn 0.5s ease-in-out;
+    background: #d0d0d0;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Activity Image Container */
+.activity-image-container {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #f0f0f0;
+    border-radius: 25px 25px 0 0;
+    overflow: hidden;
+}
+
+.activity-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    cursor: pointer;
+}
+
+/* Overlay Text Box (White 50% opacity) */
+.activity-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1.5rem;
+    border-radius: 20px 20px 0 0;
+}
+
+.activity-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 0.5rem;
+    text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.activity-location {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #333;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.activity-detail {
+    color: #222;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+/* Bottom Info Section */
+.activity-info {
+    background: #d0d0d0;
+    padding: 1rem 1.5rem;
+    border-radius: 0 0 25px 25px;
+}
+
+.activity-date {
+    color: #555;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.activity-etc {
+    background: rgba(0, 139, 139, 0.1);
+    border-left: 4px solid #008B8B;
+    padding: 0.75rem;
+    margin: 0.75rem 0;
+    border-radius: 5px;
+    font-size: 0.95rem;
+    color: #333;
+    font-weight: 500;
+}
+
+.activity-map {
+    margin-top: 0.75rem;
+}
+
+.map-link {
+    display: inline-block;
+    background: #008B8B;
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border-radius: 25px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+}
+
+.map-link:hover {
+    background: #006666;
+    transform: scale(1.05);
+}
+
+/* Image Modal */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.3s ease;
+}
+
+.modal img {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 35px;
+    color: white;
+    font-size: 40px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* No data message */
+.no-data {
+    text-align: center;
+    padding: 3rem 1.5rem;
+    color: #999;
+}
