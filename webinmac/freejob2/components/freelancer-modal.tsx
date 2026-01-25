@@ -1,12 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { User } from '@/types/database'
-import { MessageSquare } from 'lucide-react'
+import { MessageSquare, ShieldAlert } from 'lucide-react'
+import { isRegulatedProfession } from '@/lib/utils'
 
 interface FreelancerModalProps {
   freelancer: User
@@ -15,11 +16,16 @@ interface FreelancerModalProps {
 }
 
 export function FreelancerModal({ freelancer, isOpen, onClose }: FreelancerModalProps) {
+  const isRegulated = isRegulatedProfession(freelancer.skills_tags || [])
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-card-foreground text-thai" style={{ color: 'hsl(var(--accent))' }}>โปรไฟล์ฟรีแลนซ์</DialogTitle>
+          <DialogDescription className="text-thai">
+            ดูข้อมูลโปรไฟล์และทักษะของฟรีแลนซ์
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-6">
           <div className="flex items-start gap-6">
@@ -51,6 +57,18 @@ export function FreelancerModal({ freelancer, isOpen, onClose }: FreelancerModal
               </Badge>
             </div>
           </div>
+
+          {/* Regulated Profession Warning - in profile details section */}
+          {isRegulated && (
+            <div className="p-3 rounded-lg bg-orange-50 border border-orange-200">
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-orange-700 text-thai font-medium leading-relaxed">
+                  อาชีพควบคุม: โปรดขอดูใบอนุญาตก่อนเริ่มงาน
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Bio Section */}
           <div>
@@ -87,11 +105,11 @@ export function FreelancerModal({ freelancer, isOpen, onClose }: FreelancerModal
                 ฿{('hourly_rate' in freelancer && typeof freelancer.hourly_rate === 'number') ? freelancer.hourly_rate : 'N/A'}/ชม.
               </p>
             </div>
-            {'province' in freelancer && freelancer.province && (
+            {freelancer.province && (
               <div>
                 <p className="text-sm text-muted-foreground text-thai mb-1">จังหวัด</p>
                 <p className="text-sm font-medium text-card-foreground text-thai">
-                  {String(freelancer.province)}
+                  {freelancer.province}
                 </p>
               </div>
             )}
@@ -102,18 +120,19 @@ export function FreelancerModal({ freelancer, isOpen, onClose }: FreelancerModal
           </div>
 
           {/* Work Style Tags */}
-          {'work_style_tags' in freelancer && Array.isArray(freelancer.work_style_tags) && freelancer.work_style_tags.length > 0 && (
+          {freelancer.workStyles && Array.isArray(freelancer.workStyles) && freelancer.workStyles.length > 0 && (
             <div className="pt-4 border-t" style={{ borderColor: 'hsl(var(--accent))' }}>
               <h3 className="font-semibold mb-3 text-card-foreground text-thai" style={{ color: 'hsl(var(--accent))' }}>สไตล์การทำงาน</h3>
               <div className="flex flex-wrap gap-2">
-                {freelancer.work_style_tags.map((style: string, idx: number) => (
+                {freelancer.workStyles.map((style: string, idx: number) => (
                   <Badge 
                     key={`work-style-${style}-${idx}`} 
                     variant="outline"
-                    className="text-thai border-accent"
+                    className="text-thai border-amber-400 text-amber-700 bg-amber-50"
                     style={{ 
-                      borderColor: 'hsl(var(--accent))',
-                      color: 'hsl(var(--accent))'
+                      borderColor: '#fbbf24',
+                      color: '#92400e',
+                      backgroundColor: '#fffbeb'
                     }}
                   >
                     {style}

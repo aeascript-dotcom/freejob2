@@ -99,7 +99,7 @@ export function ContractModal({ isOpen, onClose, onAccept, contractData }: Contr
               วิธีชำระเงิน
             </h3>
             <p className="text-sm text-muted-foreground text-thai">
-              ระบบจะจำลองการชำระเงินอัตโนมัติเมื่อคุณคลิก "ยอมรับเงื่อนไขและชำระเงิน"
+              ระบบจะจำลองการชำระเงินอัตโนมัติเมื่อคุณคลิก &quot;ยอมรับเงื่อนไขและชำระเงิน&quot;
             </p>
           </div>
         </div>

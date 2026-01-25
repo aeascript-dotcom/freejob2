@@ -44,3 +44,31 @@ export function generateId(prefix = 'id'): string {
   }
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
+
+/**
+ * Regulated profession keywords that require government license (ใบประกอบวิชาชีพ)
+ * Used to display warnings to employers
+ */
+export const REGULATED_KEYWORDS = [
+  "ทนาย", "Lawyer", "ว่าความ", "สืบพยาน", // Lawyer License
+  "บัญชี", "Audit", "ภาษี", "ตรวจสอบบัญชี", // CPA License
+  "สถาปนิก", "Architect", "วิศวกร", "เขียนแบบขออนุญาต", // Architect/Engineer License
+  "ไกด์", "Guide", "นำเที่ยว", "Tour Guide", // Tour Guide License
+  "แพทย์", "พยาบาล", "เภสัช", "รักษา", // Medical License
+  "ขับรถ", "Driver", "คนขับรถ", // Public Transport License
+  "รับทำบัญชี", "Accounting", "ยื่นภาษี", // Accounting License
+  "ตรวจรับบ้าน", "Home Defect Inspection", // Engineer License
+  "ประกันตัว", "Criminal Defense" // Lawyer License
+]
+
+/**
+ * Check if a freelancer's skills contain regulated profession keywords
+ */
+export function isRegulatedProfession(skillsTags: string[]): boolean {
+  if (!skillsTags || skillsTags.length === 0) return false
+  
+  const skillsText = skillsTags.join(' ').toLowerCase()
+  return REGULATED_KEYWORDS.some(keyword => 
+    skillsText.includes(keyword.toLowerCase())
+  )
+}

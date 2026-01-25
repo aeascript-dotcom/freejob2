@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
+import { DisclaimerBanner } from '@/components/home/disclaimer-banner'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Briefcase, Users } from 'lucide-react'
@@ -12,6 +13,7 @@ export default function Home() {
     <div className="min-h-screen bg-background relative">
       <GridBackground />
       <Navbar />
+      <DisclaimerBanner />
       
       <main className="container mx-auto px-4 py-16 relative z-10">
         {/* Hero Section */}

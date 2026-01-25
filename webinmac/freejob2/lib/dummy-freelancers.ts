@@ -1,8 +1,12 @@
 /**
+ * @deprecated THIS FILE IS FOR DEVELOPMENT ONLY. DELETE WHEN CONNECTING TO REAL DB.
+ * 
  * Dummy Freelancers Data
  * 
  * 50 realistic Thai freelancers for testing Search & Filtering and Quotation systems
  * Distributed across 5 categories (10 users each)
+ * 
+ * All data strictly follows the User interface from types/database.ts
  */
 
 import type { User } from '@/types/database'
@@ -778,12 +782,3 @@ const dummyFreelancers: User[] = [
 
 // Export the data
 export { dummyFreelancers }
-
-// Export by category for easier filtering
-export const dummyFreelancersByCategory = {
-  homeLiving: homeLivingFreelancers.map(u => ({ ...u, updated_at: u.created_at })),
-  design: designFreelancers.map(u => ({ ...u, updated_at: u.created_at })),
-  marketing: marketingFreelancers.map(u => ({ ...u, updated_at: u.created_at })),
-  tech: techFreelancers.map(u => ({ ...u, updated_at: u.created_at })),
-  lifestyle: lifestyleFreelancers.map(u => ({ ...u, updated_at: u.created_at })),
-}

@@ -36,25 +36,26 @@ export async function requireAdmin() {
   return profile
 }
 
-/**
- * Get current user profile (for admin pages)
- */
-export async function getAdminProfile() {
-  const supabase = await createClient()
-  
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    return null
-  }
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  return profile
-}
+// TODO: Keep for future Supabase integration
+// /**
+//  * Get current user profile (for admin pages)
+//  */
+// export async function getAdminProfile() {
+//   const supabase = await createClient()
+//   
+//   const {
+//     data: { user },
+//   } = await supabase.auth.getUser()
+//
+//   if (!user) {
+//     return null
+//   }
+//
+//   const { data: profile } = await supabase
+//     .from('users')
+//     .select('*')
+//     .eq('id', user.id)
+//     .single()
+//
+//   return profile
+// }

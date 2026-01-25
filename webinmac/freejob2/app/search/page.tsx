@@ -8,9 +8,10 @@ import { FreelancerCard } from '@/components/freelancer-card'
 import { SearchSidebar } from '@/components/search-sidebar'
 import { mockFreelancers, JOB_CATEGORIES, PROVINCES, WORK_STYLES } from '@/lib/mock-data'
 import { getCurrentUser } from '@/lib/auth-mock'
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Search, X } from 'lucide-react'
+import { AdvancedSearchModal } from '@/components/search/advanced-search-modal'
 import { analyzeSearchInput, extractCandidateTerms } from '@/lib/search-utils'
 import { incrementCandidateTerm, notifyAdmin } from '@/services/tagDiscoveryService'
 import { ToastContainer } from '@/components/toast'
@@ -19,7 +20,26 @@ import { RightStatsSidebar } from '@/components/right-stats-sidebar'
 
 export default function SearchPage() {
   const [searchQuery, setSearchQuery] = useState('')
-  const [freelancers, setFreelancers] = useState(mockFreelancers)
+  // Convert MockFreelancer to User type
+  const [freelancers, setFreelancers] = useState(() => 
+    mockFreelancers.map(f => ({
+      id: f.id,
+      email: f.email,
+      role: f.role as 'client' | 'freelancer' | 'admin',
+      full_name: f.full_name,
+      bio_short: f.bio_short || null,
+      bio_long: f.bio || null,
+      province: f.province,
+      workStyles: f.work_style_tags,
+      skills_tags: f.skills_tags,
+      availability_status: f.availability_status,
+      is_duplicate_flag: false,
+      stats_completed_jobs: f.stats_completed_jobs,
+      avatar_url: f.avatar_url || null,
+      created_at: f.created_at,
+      updated_at: f.created_at
+    }))
+  )
   const [categories, setCategories] = useState(JOB_CATEGORIES)
   
   // Separate manual tags (clicked by user) and auto tags (matched by search)
@@ -31,7 +51,7 @@ export default function SearchPage() {
     return [...manualSelectedTags, ...autoSelectedTags]
   }, [manualSelectedTags, autoSelectedTags])
   
-  const [selectedCategories, setSelectedCategories] = useState<string[]>([]) // Category IDs
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null) // Single category ID
   const [selectedProvinces, setSelectedProvinces] = useState<string[]>([])
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([])
   const [availableTags, setAvailableTags] = useState<string[]>([])
@@ -41,6 +61,7 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'info' | 'success' | 'warning' | 'error' }>>([])
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false)
 
   // Store all available tags (never changes) - exclude work styles and provinces
   const [allAvailableTags] = useState(() => {
@@ -57,28 +78,27 @@ export default function SearchPage() {
     return Array.from(allTags)
   })
 
-  // Compute visible tags based on selected categories and search query
+  // Compute visible tags based on selected category and search query
   const visibleTags = useMemo(() => {
     // Base tags to filter from (either from search query or all tags)
     const baseTags = availableTags.length > 0 ? availableTags : allAvailableTags
 
     // Scenario C: No category selected - show all base tags
-    if (selectedCategories.length === 0) {
+    if (!selectedCategory) {
       return baseTags
     }
 
-    // Scenario A & B: Category selected - show only tags from selected categories
-    const categoryTags = new Set<string>()
-    selectedCategories.forEach(categoryId => {
-      const category = JOB_CATEGORIES.find(c => c.id === categoryId)
-      if (category) {
-        category.tags.forEach(tag => categoryTags.add(tag))
-      }
-    })
+    // Scenario A & B: Category selected - show only tags from selected category
+    const category = JOB_CATEGORIES.find(c => c.id === selectedCategory)
+    if (!category) {
+      return baseTags
+    }
 
-    // Filter to only show tags that exist in baseTags AND belong to selected categories
+    const categoryTags = new Set<string>(category.tags)
+
+    // Filter to only show tags that exist in baseTags AND belong to selected category
     return baseTags.filter(tag => categoryTags.has(tag))
-  }, [selectedCategories, allAvailableTags, availableTags])
+  }, [selectedCategory, allAvailableTags, availableTags])
 
   // Debounced search query for performance
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
@@ -165,35 +185,37 @@ export default function SearchPage() {
   }, [])
 
   const handleCategoryClick = (categoryId: string) => {
-    setSelectedCategories(prev => {
-      const isSelected = prev.includes(categoryId)
-      const newCategories = isSelected
-        ? prev.filter(id => id !== categoryId)
-        : [...prev, categoryId]
-
-      // When deselecting a category, clear tags that belong only to that category
-      if (isSelected) {
+    setSelectedCategory(prev => {
+      // Single-select logic: if clicking the same category, deselect it
+      // Otherwise, select the new category (replacing any previous selection)
+      if (prev === categoryId) {
+        // Deselecting - clear tags that belong only to this category
         const deselectedCategory = JOB_CATEGORIES.find(c => c.id === categoryId)
         if (deselectedCategory) {
-          // Get tags that belong to other selected categories
-          const otherCategoryTags = new Set<string>()
-          newCategories.forEach(id => {
-            const cat = JOB_CATEGORIES.find(c => c.id === id)
-            if (cat) {
-              cat.tags.forEach(tag => otherCategoryTags.add(tag))
-            }
-          })
-
-          // Remove tags that don't belong to any remaining selected category
-          // Only remove from manual tags (auto tags are managed by search query)
+          const categoryTags = new Set<string>(deselectedCategory.tags)
+          // Remove tags that belong to the deselected category
           setManualSelectedTags(prevTags => 
-            prevTags.filter(tag => otherCategoryTags.has(tag))
+            prevTags.filter(tag => !categoryTags.has(tag))
+          )
+          setAutoSelectedTags(prevTags => 
+            prevTags.filter(tag => !categoryTags.has(tag))
           )
         }
+        return null
+      } else {
+        // Selecting new category - keep current tags (they might belong to multiple categories)
+        return categoryId
       }
-
-      return newCategories
     })
+  }
+
+  const handleAdvancedSearchApply = (tags: string[]) => {
+    // Apply tags from advanced search modal
+    // Clear auto-selected tags and set manual tags
+    setAutoSelectedTags([])
+    setManualSelectedTags(tags)
+    // Clear category selection when using advanced search
+    setSelectedCategory(null)
   }
 
   const handleTagClick = (tag: string) => {
@@ -266,31 +288,27 @@ export default function SearchPage() {
   // Memoized filtered freelancers for performance
   const filteredFreelancers = useMemo(() => {
     return freelancers.filter(f => {
-    // Filter by selected categories (HIGHEST PRIORITY)
-    if (selectedCategories.length > 0) {
-      // Get all tags from selected categories
-      const categoryTags = new Set<string>()
-      selectedCategories.forEach(categoryId => {
-        const category = JOB_CATEGORIES.find(c => c.id === categoryId)
-        if (category) {
-          category.tags.forEach(tag => categoryTags.add(tag))
-        }
-      })
+    // Filter by selected category (HIGHEST PRIORITY)
+    if (selectedCategory) {
+      const category = JOB_CATEGORIES.find(c => c.id === selectedCategory)
+      if (category) {
+        const categoryTags = new Set<string>(category.tags)
 
-      // Check if freelancer has at least one tag from selected categories
-      // IMPORTANT: Only check skills_tags, exclude work_style_tags and provinces
-      const relevantTags = f.skills_tags.filter(tag => 
-        !WORK_STYLES.includes(tag) && !PROVINCES.includes(tag)
-      )
-      const hasMatchingCategoryTag = relevantTags.some(tag => categoryTags.has(tag))
-      if (!hasMatchingCategoryTag) {
-        return false
+        // Check if freelancer has at least one tag from selected category
+        // IMPORTANT: Only check skills_tags, exclude work_style_tags and provinces
+        const relevantTags = f.skills_tags.filter(tag => 
+          !WORK_STYLES.includes(tag) && !PROVINCES.includes(tag)
+        )
+        const hasMatchingCategoryTag = relevantTags.some(tag => categoryTags.has(tag))
+        if (!hasMatchingCategoryTag) {
+          return false
+        }
       }
     }
 
     // Filter by provinces
     if (selectedProvinces.length > 0) {
-      const freelancerProvince = (f as any).province
+      const freelancerProvince = f.province
       if (!freelancerProvince || !selectedProvinces.includes(freelancerProvince)) {
         return false
       }
@@ -298,7 +316,7 @@ export default function SearchPage() {
 
     // Filter by work styles
     if (selectedWorkStyles.length > 0) {
-      const freelancerWorkStyles = (f as any).work_style_tags || []
+      const freelancerWorkStyles = f.workStyles || []
       const hasMatchingWorkStyle = selectedWorkStyles.some(style => 
         freelancerWorkStyles.includes(style) || f.skills_tags.includes(style)
       )
@@ -309,7 +327,7 @@ export default function SearchPage() {
 
     // Filter by tags (category tags) - only if no category is selected
     // If category is selected, tags are already filtered by category
-    if (selectedTags.length > 0 && selectedCategories.length === 0) {
+    if (selectedTags.length > 0 && !selectedCategory) {
       const hasMatchingTag = selectedTags.some(tag => f.skills_tags.includes(tag))
       if (!hasMatchingTag) {
         return false
@@ -317,7 +335,7 @@ export default function SearchPage() {
     }
 
     // If both category and tags are selected, freelancer must match both
-    if (selectedTags.length > 0 && selectedCategories.length > 0) {
+    if (selectedTags.length > 0 && selectedCategory) {
       const hasMatchingTag = selectedTags.some(tag => f.skills_tags.includes(tag))
       if (!hasMatchingTag) {
         return false
@@ -326,7 +344,7 @@ export default function SearchPage() {
 
     return true
     })
-  }, [freelancers, selectedCategories, selectedProvinces, selectedWorkStyles, selectedTags])
+  }, [freelancers, selectedCategory, selectedProvinces, selectedWorkStyles, selectedTags])
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -376,22 +394,36 @@ export default function SearchPage() {
             </div>
           )}
 
-          {/* Category Buttons */}
-          <div className="flex flex-wrap gap-2 mt-2">
+          {/* Category Buttons - Large Single-Select */}
+          <div className="flex flex-wrap gap-4 mt-4 items-center">
             {categories.map(category => {
-              const isSelected = selectedCategories.includes(category.id)
+              const isSelected = selectedCategory === category.id
               return (
                 <Button
                   key={category.id}
                   variant={isSelected ? 'default' : 'outline'}
-                  size="sm"
                   onClick={() => handleCategoryClick(category.id)}
-                  className={isSelected ? 'bg-primary text-primary-foreground' : ''}
+                  className={`
+                    text-lg px-8 py-4 font-semibold transition-all duration-200 text-thai
+                    ${isSelected 
+                      ? 'bg-yellow-400 hover:bg-yellow-500 active:bg-yellow-600 text-gray-900 border-2 border-yellow-600 shadow-lg scale-105 ring-2 ring-yellow-300 ring-offset-2' 
+                      : 'bg-white hover:bg-gray-100 active:bg-gray-200 text-gray-700 border-2 border-gray-300 hover:border-gray-400 hover:shadow-md hover:scale-102'
+                    }
+                  `}
                 >
                   {category.name}
                 </Button>
               )
             })}
+            {/* Advanced Search Button */}
+            <Button
+              variant="outline"
+              onClick={() => setIsAdvancedSearchOpen(true)}
+              className="text-lg px-6 py-4 font-semibold transition-all duration-200 text-thai border-2 border-amber-500 text-amber-600 hover:bg-amber-50 hover:border-amber-600 hover:shadow-md"
+            >
+              <Search className="w-5 h-5 mr-2" />
+              ค้นหาแบบละเอียด
+            </Button>
           </div>
         </div>
 
@@ -403,7 +435,7 @@ export default function SearchPage() {
               <SearchSidebar
                 tags={visibleTags}
                 selectedTags={selectedTags}
-                selectedCategories={selectedCategories}
+                selectedCategories={selectedCategory ? [selectedCategory] : []}
                 selectedProvinces={selectedProvinces}
                 selectedWorkStyles={selectedWorkStyles}
                 autoSelectedTags={autoSelectedTags}
@@ -458,7 +490,7 @@ export default function SearchPage() {
                     console.log('Admin notification:', {
                       searchQuery,
                       selectedTags,
-                      selectedCategories,
+                      selectedCategory: selectedCategory,
                       selectedProvinces,
                       selectedWorkStyles,
                       timestamp: new Date().toISOString()
@@ -499,6 +531,9 @@ export default function SearchPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle className="text-card-foreground heading-glow">ขอใบเสนอราคา</DialogTitle>
+            <DialogDescription className="text-thai">
+              ส่งคำขอใบเสนอราคาไปยังฟรีแลนซ์ที่เลือก
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-muted-foreground text-thai">
@@ -536,6 +571,14 @@ export default function SearchPage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Advanced Search Modal */}
+      <AdvancedSearchModal
+        isOpen={isAdvancedSearchOpen}
+        onClose={() => setIsAdvancedSearchOpen(false)}
+        onApplyTags={handleAdvancedSearchApply}
+        initialSelectedTags={[...manualSelectedTags, ...autoSelectedTags]}
+      />
     </div>
   )
 }

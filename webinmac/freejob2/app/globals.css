@@ -3,6 +3,12 @@
 @tailwind utilities;
 
 @layer base {
+  /* Base font size - will be overridden by FontSizeProvider */
+  html {
+    font-size: 100%; /* 16px base - default small size */
+    transition: font-size 0.3s ease; /* Smooth transition for font size changes */
+  }
+  
   :root {
     /* Bold Yellow & Black Theme */
     --background: 0 0% 7%; /* #111111 - Deep Matte Black */
@@ -152,14 +158,6 @@
     font-family: var(--font-noto-sans-thai), sans-serif !important;
   }
   
-  /* Card Style A: Solid Yellow background with Black text */
-  .card-yellow {
-    background: hsl(var(--card-yellow));
-    color: hsl(var(--card-yellow-foreground));
-    border-radius: var(--radius);
-    box-shadow: 8px 8px 0px 0px rgba(0, 0, 0, 1); /* Hard-edge shadow */
-  }
-  
   /* Card Style B: Black background with thin Yellow border */
   .card-black {
     background: hsl(var(--card));
@@ -167,30 +165,6 @@
     border: 2px solid hsl(var(--accent));
     border-radius: var(--radius);
     box-shadow: 8px 8px 0px 0px rgba(255, 215, 0, 0.3); /* Hard-edge shadow */
-  }
-  
-  /* Card Style C: Image background with dark overlay and Yellow text */
-  .card-image {
-    position: relative;
-    border-radius: var(--radius);
-    overflow: hidden;
-  }
-  
-  .card-image::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.9));
-    z-index: 1;
-  }
-  
-  .card-image > * {
-    position: relative;
-    z-index: 2;
-    color: hsl(var(--accent));
   }
   
   /* Primary Button - Pill-shaped or Rounded Rectangle */
@@ -212,18 +186,6 @@
     transform: translate(-2px, -2px);
   }
   
-  /* Hazard Tape Pattern - Diagonal Stripes */
-  .hazard-stripe {
-    background: repeating-linear-gradient(
-      45deg,
-      hsl(var(--accent)),
-      hsl(var(--accent)) 20px,
-      hsl(var(--background)) 20px,
-      hsl(var(--background)) 40px
-    );
-    height: 8px;
-  }
-  
   /* Wireframe Grid Background */
   .grid-background {
     background-image: 
@@ -231,18 +193,6 @@
       linear-gradient(90deg, hsl(var(--accent)) 1px, transparent 1px);
     background-size: 40px 40px;
     opacity: 0.1;
-  }
-  
-  /* Circular Badge/Sticker */
-  .badge-circle {
-    background: hsl(var(--accent));
-    color: hsl(var(--accent-foreground));
-    border-radius: 50%;
-    padding: 0.5rem 0.75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    font-size: 0.75rem;
-    box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
   }
   
   /* Thick Bold Separator Line */

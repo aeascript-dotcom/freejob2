@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button'
 import { User } from '@/types/database'
 import { useState } from 'react'
 import { FreelancerModal } from './freelancer-modal'
-import { Eye, MessageSquare } from 'lucide-react'
+import { Eye, MessageSquare, MapPin, ShieldAlert } from 'lucide-react'
+import { isRegulatedProfession } from '@/lib/utils'
 
 interface FreelancerCardProps {
   freelancer: User
@@ -24,6 +25,7 @@ export function FreelancerCard({
   showCheckbox = false 
 }: FreelancerCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const isRegulated = isRegulatedProfession(freelancer.skills_tags || [])
 
   const handleCardClick = (e: React.MouseEvent) => {
     // ถ้ามี checkbox และคลิกที่ checkbox ให้เลือก/ยกเลิกการเลือก
@@ -38,7 +40,7 @@ export function FreelancerCard({
   return (
     <>
       <Card 
-        className={`cursor-pointer transition-all bg-card text-card-foreground card-black hover:scale-[1.02] hover:shadow-lg ${
+        className={`cursor-pointer transition-all bg-stone-50 text-gray-700 border-2 border-gray-200 hover:scale-[1.02] hover:shadow-lg ${
           isSelected ? 'ring-4 ring-accent' : ''
         }`}
         onClick={handleCardClick}
@@ -49,13 +51,21 @@ export function FreelancerCard({
               src={freelancer.avatar_url || `https://pravatar.cc/150?img=${freelancer.id.slice(0, 2)}`} 
               alt={freelancer.full_name || 'Unknown freelancer'}
             />
-            <AvatarFallback className="bg-secondary text-secondary-foreground">
+            <AvatarFallback className="bg-gray-300 text-gray-700">
               {freelancer.full_name?.charAt(0)?.toUpperCase() || '?'}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg text-card-foreground text-thai">{freelancer.full_name || 'Unknown'}</h3>
-            <p className="text-sm text-muted-foreground text-thai">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-semibold text-lg text-gray-800 text-thai">{freelancer.full_name || 'Unknown'}</h3>
+              {freelancer.province && (
+                <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <MapPin className="w-3 h-3" />
+                  <span className="text-thai">{freelancer.province}</span>
+                </div>
+              )}
+            </div>
+            <p className="text-sm text-gray-600 text-thai">
               {freelancer.bio_short || 'ไม่มีคำอธิบาย'}
             </p>
           </div>
@@ -72,20 +82,46 @@ export function FreelancerCard({
           )}
         </CardHeader>
         <CardContent>
+          {/* Regulated Profession Warning - in profile details section */}
+          {isRegulated && (
+            <div className="mb-3 p-3 rounded-lg bg-orange-50 border border-orange-200">
+              <div className="flex items-start gap-2">
+                <ShieldAlert className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                <p className="text-xs text-orange-700 text-thai font-medium leading-relaxed">
+                  อาชีพควบคุม: โปรดขอดูใบอนุญาตก่อนเริ่มงาน
+                </p>
+              </div>
+            </div>
+          )}
+          {/* Work Styles Badges */}
+          {freelancer.workStyles && freelancer.workStyles.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-3">
+              {freelancer.workStyles.map((style, idx) => (
+                <Badge 
+                  key={`work-style-${style}-${idx}`} 
+                  variant="outline" 
+                  className="text-xs border-amber-400 text-amber-700 bg-amber-50 hover:bg-amber-100"
+                >
+                  {style}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {/* Skills Tags */}
           <div className="flex flex-wrap gap-2">
             {freelancer.skills_tags?.slice(0, 4).map((tag, idx) => (
-              <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs bg-secondary text-secondary-foreground border border-border">
+              <Badge key={`${tag}-${idx}`} variant="secondary" className="text-xs bg-gray-200 text-gray-700 border border-gray-300">
                 {tag}
               </Badge>
             ))}
             {freelancer.skills_tags.length > 4 && (
-              <Badge variant="outline" className="text-xs border-border">
+              <Badge variant="outline" className="text-xs border-gray-300 text-gray-600">
                 +{freelancer.skills_tags.length - 4}
               </Badge>
             )}
           </div>
           <div className="mt-3 flex items-center justify-between text-sm">
-            <span className="text-muted-foreground text-thai">
+            <span className="text-gray-600 text-thai">
               งานที่ทำแล้ว: {freelancer.stats_completed_jobs}
             </span>
             <Badge 
@@ -93,7 +129,7 @@ export function FreelancerCard({
               className={`text-thai ${
                 freelancer.availability_status === 'available' 
                   ? 'border-2' 
-                  : 'bg-secondary text-secondary-foreground'
+                  : 'bg-gray-300 text-gray-700'
               }`}
               style={freelancer.availability_status === 'available' ? {
                 backgroundColor: '#86efac', // Light green (green-300)
@@ -106,11 +142,11 @@ export function FreelancerCard({
           </div>
           
           {/* Action Buttons */}
-          <div className="mt-4 pt-3 border-t space-y-2" style={{ borderColor: 'hsl(var(--accent))' }}>
+          <div className="mt-4 pt-3 border-t space-y-2 border-gray-300">
             <Button
               variant="outline"
               size="sm"
-              className="w-full text-thai border-accent hover:bg-accent hover:text-accent-foreground"
+              className="w-full text-thai border-gray-400 text-gray-700 hover:bg-gray-100 hover:text-gray-900"
               onClick={(e) => {
                 e.stopPropagation()
                 setIsModalOpen(true)

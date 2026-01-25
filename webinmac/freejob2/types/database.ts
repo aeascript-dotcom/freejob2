@@ -12,6 +12,8 @@ export interface User {
   full_name: string;
   bio_short: string | null;
   bio_long: string | null;
+  province: string;
+  workStyles: string[];
   skills_tags: string[];
   availability_status: AvailabilityStatus;
   is_duplicate_flag: boolean;

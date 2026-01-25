@@ -179,7 +179,7 @@ export function SearchSidebar({
           </button>
           {isProvinceOpen && (
             <div className="space-y-3">
-              {/* Search Input */}
+              {/* Search Input and Dropdown Container */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                 <Input
@@ -205,10 +205,9 @@ export function SearchSidebar({
                     <X className="w-4 h-4" />
                   </button>
                 )}
-              </div>
 
-              {/* Filtered Province Dropdown */}
-              {showProvinceDropdown && provinceSearchQuery && (
+                {/* Filtered Province Dropdown */}
+                {showProvinceDropdown && provinceSearchQuery && (
                 <div className="max-h-60 overflow-y-auto border-2 rounded-lg bg-card" style={{ borderColor: 'hsl(var(--accent))' }}>
                   {PROVINCES.filter(province => 
                     province.toLowerCase().includes(provinceSearchQuery.toLowerCase())
@@ -233,7 +232,8 @@ export function SearchSidebar({
                     </div>
                   )}
                 </div>
-              )}
+                )}
+              </div>
 
               {/* Selected Provinces as Small Badges */}
               {selectedProvinces.length > 0 && (
@@ -357,7 +357,7 @@ export function SearchSidebar({
           {isCategoryOpen && (
             <>
               {hasCategoryFilter && (
-                <div className="mb-3 p-2 bg-accent/30 border border-accent rounded text-xs text-accent-foreground">
+                <div className="mb-3 p-2 bg-accent/30 border border-accent rounded text-xs text-accent-foreground text-thai">
                   กำลังแสดงแท็กจาก {selectedCategories.length} หมวดหมู่ที่เลือก
                 </div>
               )}
@@ -388,7 +388,7 @@ export function SearchSidebar({
                       <Badge
                         key={idx}
                         variant={isSelected ? 'default' : 'outline'}
-                        className={`cursor-pointer hover:bg-primary/80 transition-all text-sm px-3 py-1.5 border-2 ${
+                        className={`cursor-pointer hover:bg-primary/80 transition-all text-sm px-3 py-1.5 border-2 text-thai break-words max-w-full ${
                           isAutoSelected ? 'ring-2 ring-yellow-400 ring-offset-2 animate-pulse' : ''
                         }`}
                         style={{
@@ -405,10 +405,12 @@ export function SearchSidebar({
                           backgroundColor: isAutoSelected && !isSelected 
                             ? 'rgba(255, 215, 0, 0.15)' 
                             : undefined,
-                          fontWeight: isAutoSelected ? 'bold' : 'normal'
+                          fontWeight: isAutoSelected ? 'bold' : 'normal',
+                          wordBreak: 'break-word',
+                          whiteSpace: 'normal'
                         }}
                         onClick={() => onTagClick(tag)}
-                        title={isAutoSelected ? 'ถูกเลือกอัตโนมัติจากการค้นหา' : ''}
+                        title={isAutoSelected ? 'ถูกเลือกอัตโนมัติจากการค้นหา' : tag}
                       >
                         {tag} {isAutoSelected && '✨'}
                       </Badge>
@@ -431,7 +433,7 @@ export function SearchSidebar({
                             <Badge
                               key={tagIdx}
                               variant={isSelected ? 'default' : 'outline'}
-                              className={`cursor-pointer hover:bg-primary/80 transition-all text-sm px-3 py-1.5 text-card-foreground ${
+                              className={`cursor-pointer hover:bg-primary/80 transition-all text-sm px-3 py-1.5 text-card-foreground text-thai break-words max-w-full ${
                                 isAutoSelected ? 'ring-2 ring-yellow-400 ring-offset-2 animate-pulse' : ''
                               }`}
                               style={{
@@ -448,10 +450,12 @@ export function SearchSidebar({
                                 backgroundColor: isAutoSelected && !isSelected 
                                   ? 'rgba(255, 215, 0, 0.15)' 
                                   : undefined,
-                                fontWeight: isAutoSelected ? 'bold' : 'normal'
+                                fontWeight: isAutoSelected ? 'bold' : 'normal',
+                                wordBreak: 'break-word',
+                                whiteSpace: 'normal'
                               }}
                               onClick={() => onTagClick(tag)}
-                              title={isAutoSelected ? 'ถูกเลือกอัตโนมัติจากการค้นหา' : ''}
+                              title={isAutoSelected ? 'ถูกเลือกอัตโนมัติจากการค้นหา' : tag}
                             >
                               {tag} {isAutoSelected && '✨'}
                             </Badge>

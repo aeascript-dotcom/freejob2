@@ -1,7 +1,7 @@
 'use client'
 
 import { useParams, useRouter } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Navbar } from '@/components/navbar'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -10,12 +10,11 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Send, ArrowLeft, Circle, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { useChatScenario } from '@/hooks/useChatScenario'
-import { Message } from '@/types/chat'
+import { Message, QuotationData } from '@/types/chat'
 import { QuotationCard } from '@/components/chat/quotation-card'
 import { ContractModal } from '@/components/chat/contract-modal'
 import { mockFreelancers } from '@/lib/mock-data'
-import { formatTime, formatDate } from '@/lib/utils'
+import { formatTime, formatDate, generateId } from '@/lib/utils'
 
 type JobStatus = 'negotiating' | 'quoted' | 'working'
 
@@ -78,6 +77,18 @@ export default function ChatPage() {
   const [isContractModalOpen, setIsContractModalOpen] = useState(false)
   const [currentQuotation, setCurrentQuotation] = useState<{ jobTitle: string; price: number; duration: string } | null>(null)
   
+  // Loading state - fixed to resolve after 500ms
+  const [isLoading, setIsLoading] = useState(true)
+  
+  // Messages state - initialized as empty array
+  const [messages, setMessages] = useState<Message[]>([])
+  const [isTyping, setIsTyping] = useState(false)
+  
+  // Refs to track bot state
+  const hasGreetedRef = useRef(false)
+  const hasSentQuotationRef = useRef(false)
+  const timeoutRefs = useRef<NodeJS.Timeout[]>([])
+  
   // Find freelancer data based on chat ID
   const freelancer = mockFreelancers.find(f => f.id === chatId) || mockFreelancers[0]
   const currentChat = {
@@ -87,13 +98,6 @@ export default function ChatPage() {
     status: freelancer?.availability_status === 'available' ? 'Online' : 'Offline',
     isOnline: freelancer?.availability_status === 'available'
   }
-
-  // Use chat scenario hook
-  const { messages, sendMessage, isTyping } = useChatScenario({
-    freelancerName: currentChat.name,
-    jobStatus,
-    onJobStatusChange: setJobStatus
-  })
 
   // Calculate due date (3 days from now) - use useEffect to avoid hydration issues
   const [dueDate, setDueDate] = useState<Date | null>(null)
@@ -107,10 +111,132 @@ export default function ChatPage() {
     setDueDate(calculateDueDate())
   }, [])
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return
+  // Fix loading state - set to false after 500ms
+  useEffect(() => {
+    const loadingTimeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 500)
     
-    sendMessage(inputMessage)
+    return () => {
+      clearTimeout(loadingTimeout)
+    }
+  }, [])
+
+  // SimpleBotEngine - Trigger A: Greeting when messages.length === 0 and not loading
+  useEffect(() => {
+    if (!isLoading && messages.length === 0 && !hasGreetedRef.current) {
+      hasGreetedRef.current = true
+      
+      const timeout = setTimeout(() => {
+        const greeting: Message = {
+          id: generateId('msg'),
+          sender: 'freelancer',
+          text: 'สวัสดีครับ สนใจงานชิ้นนี้ครับ มีรายละเอียดเพิ่มเติมไหมครับ?',
+          type: 'text',
+          timestamp: new Date()
+        }
+        setMessages([greeting])
+      }, 1000)
+      
+      timeoutRefs.current.push(timeout)
+    }
+  }, [isLoading, messages.length])
+
+  // SimpleBotEngine - Trigger B: Response & Quote when last message is from user
+  useEffect(() => {
+    if (messages.length === 0) return
+    
+    const lastMessage = messages[messages.length - 1]
+    
+    // Only trigger if last message is from user and we haven't sent quotation yet
+    if (lastMessage.sender === 'user' && !hasSentQuotationRef.current) {
+      hasSentQuotationRef.current = true
+      
+      // Action 1: Set isTyping to true
+      setIsTyping(true)
+      
+      // Action 2: Wait 2s -> Add acknowledgment message
+      const timeout1 = setTimeout(() => {
+        setIsTyping(false)
+        
+        const acknowledgment: Message = {
+          id: generateId('msg'),
+          sender: 'freelancer',
+          text: 'รับทราบครับ เดี๋ยวผมทำใบเสนอราคาให้นะครับ',
+          type: 'text',
+          timestamp: new Date()
+        }
+        setMessages(prev => [...prev, acknowledgment])
+        
+        // Action 3: Wait another 2s -> Add QUOTATION Card Message
+        const timeout2 = setTimeout(() => {
+          setIsTyping(true)
+          
+          const timeout3 = setTimeout(() => {
+            setIsTyping(false)
+            
+            const quotationData: QuotationData = {
+              id: generateId('quote'),
+              jobTitle: 'ออกแบบ Graphic',
+              scope: [
+                '3 Drafts (3 แบบร่าง)',
+                'Source Files (ไฟล์ต้นฉบับ)',
+                'Commercial Use (ใช้งานเชิงพาณิชย์ได้)',
+                '2 Revisions (แก้ไข 2 ครั้ง)'
+              ],
+              price: 3500,
+              duration: '3 วัน'
+            }
+            
+            const quotationMessage: Message = {
+              id: generateId('msg'),
+              sender: 'freelancer',
+              text: '',
+              type: 'quotation',
+              timestamp: new Date(),
+              quotationData
+            }
+            
+            setMessages(prev => [...prev, quotationMessage])
+          }, 1000)
+          
+          timeoutRefs.current.push(timeout3)
+        }, 2000)
+        
+        timeoutRefs.current.push(timeout2)
+      }, 2000)
+      
+      timeoutRefs.current.push(timeout1)
+      
+      // Cleanup: clear all timeouts if effect re-runs or component unmounts
+      return () => {
+        clearTimeout(timeout1)
+        // timeout2 and timeout3 are tracked in timeoutRefs and will be cleared on unmount
+      }
+    }
+  }, [messages])
+
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(timeout => clearTimeout(timeout))
+      timeoutRefs.current = []
+    }
+  }, [])
+
+  const handleSendMessage = () => {
+    if (!inputMessage.trim() || isTyping) return
+    
+    // Add user message
+    const userMessage: Message = {
+      id: generateId('msg'),
+      sender: 'user',
+      text: inputMessage.trim(),
+      type: 'text',
+      timestamp: new Date()
+    }
+    
+    setMessages(prev => [...prev, userMessage])
     setInputMessage('')
   }
 
@@ -246,12 +372,20 @@ export default function ChatPage() {
 
           {/* Chat Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-4">
-            {messages.length === 0 ? (
+            {isLoading ? (
               <div className="flex items-center justify-center h-full">
                 <div className="text-center">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" style={{ color: 'hsl(var(--accent))' }} />
                   <p className="text-muted-foreground text-thai text-sm">
                     กำลังโหลดการสนทนา...
+                  </p>
+                </div>
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="flex items-center justify-center h-full">
+                <div className="text-center">
+                  <p className="text-muted-foreground text-thai text-sm">
+                    เริ่มการสนทนา...
                   </p>
                 </div>
               </div>
