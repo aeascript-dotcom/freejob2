@@ -164,20 +164,28 @@ export function updateFreelancer(id: string, updates: Partial<User>): User | nul
 export function getCurrentUserFreelancer(): User | null {
   const currentUser = getCurrentUser()
   
+  // [MOCK-ONLY] Start
+  const freelancers = getAllFreelancers()
+  
+  // If no current user, use default freelancer for testing (silent fallback)
   if (!currentUser) {
-    console.warn('[FreelancerService] No current user found')
-    return null
+    const defaultFreelancer = freelancers.find(f => f.id === 'dummy_001') || freelancers[0]
+    // Only log in development mode, not in production
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FreelancerService] No current user found, using default freelancer:', defaultFreelancer?.id)
+    }
+    return defaultFreelancer || null
   }
 
-  // [MOCK-ONLY] Start
   // Try to find freelancer by email first
-  const freelancers = getAllFreelancers()
   let freelancer = freelancers.find(f => f.email === currentUser.email)
 
   // If not found by email, use the first freelancer (dummy_001) for testing
   if (!freelancer) {
     freelancer = freelancers.find(f => f.id === 'dummy_001') || freelancers[0]
-    console.log('[FreelancerService] Using default freelancer for testing:', freelancer?.id)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[FreelancerService] Using default freelancer for testing:', freelancer?.id)
+    }
   }
 
   return freelancer || null
