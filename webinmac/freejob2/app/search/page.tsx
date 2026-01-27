@@ -310,14 +310,39 @@ export default function SearchPage() {
       if (category) {
         const categoryTags = new Set<string>(category.tags)
 
-        // Check if freelancer has at least one tag from selected category
         // IMPORTANT: Only check skills_tags, exclude work_style_tags and provinces
         const relevantTags = f.skills_tags.filter(tag => 
           !WORK_STYLES.includes(tag) && !PROVINCES.includes(tag)
         )
-        const hasMatchingCategoryTag = relevantTags.some(tag => categoryTags.has(tag))
-        if (!hasMatchingCategoryTag) {
-          return false
+
+        // Count how many tags match the selected category
+        const matchingCategoryTags = relevantTags.filter(tag => categoryTags.has(tag))
+        
+        // Count how many tags match OTHER categories
+        const otherCategoryTags = relevantTags.filter(tag => {
+          // Check if tag belongs to any other category
+          return !categoryTags.has(tag) && JOB_CATEGORIES.some(cat => 
+            cat.id !== selectedCategory && cat.tags.includes(tag)
+          )
+        })
+
+        // STRICT FILTERING: 
+        // 1. Must have at least one tag from selected category
+        // 2. Tags from selected category must be majority (>= 50%) of all relevant tags
+        //    OR at least 2 tags from selected category (to handle freelancers with many tags)
+        if (matchingCategoryTags.length === 0) {
+          return false // No matching tags
+        }
+
+        // If freelancer has tags from other categories, ensure selected category tags are majority
+        if (otherCategoryTags.length > 0) {
+          const totalRelevantTags = relevantTags.length
+          const matchingRatio = matchingCategoryTags.length / totalRelevantTags
+          
+          // Require: either majority (>=50%) OR at least 2 tags from selected category
+          if (matchingRatio < 0.5 && matchingCategoryTags.length < 2) {
+            return false // Selected category tags are not primary
+          }
         }
       }
     }
