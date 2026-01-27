@@ -2,8 +2,12 @@ import type { Metadata } from "next";
 import { Noto_Sans_Thai, Oswald, Anton, Bebas_Neue, Inter, Roboto } from "next/font/google";
 import "./globals.css";
 import { MockDataInitializer } from "@/components/mock-data-initializer";
-import { FreelancerProvider } from "@/context/freelancer-context";
 import { FontSizeProvider } from "@/context/font-size-context";
+import { AuthProvider } from "@/context/auth-context";
+import { ToastProvider } from "@/context/toast-context";
+import { SearchProvider } from "@/context/search-context";
+import { FreelancerProvider } from "@/context/freelancer-context";
+import { GlobalToastContainer } from "@/components/ui/global-toast-container";
 
 const notoSansThai = Noto_Sans_Thai({
   subsets: ["latin", "thai"],
@@ -65,10 +69,18 @@ export default function RootLayout({
     <html lang="en" className={`${notoSansThai.variable} ${oswald.variable} ${anton.variable} ${bebasNeue.variable} ${inter.variable} ${roboto.variable}`} suppressHydrationWarning>
       <body className={`${notoSansThai.className} antialiased`} suppressHydrationWarning>
         <MockDataInitializer />
+        {/* Context Providers - Order matters for dependencies */}
         <FontSizeProvider>
-          <FreelancerProvider>
-            {children}
-          </FreelancerProvider>
+          <AuthProvider>
+            <ToastProvider>
+              <SearchProvider>
+                <FreelancerProvider>
+                  {children}
+                  <GlobalToastContainer />
+                </FreelancerProvider>
+              </SearchProvider>
+            </ToastProvider>
+          </AuthProvider>
         </FontSizeProvider>
       </body>
     </html>

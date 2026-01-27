@@ -7,19 +7,47 @@ import { Button } from '@/components/ui/button'
 import { FreelancerCard } from '@/components/freelancer-card'
 import { SearchSidebar } from '@/components/search-sidebar'
 import { mockFreelancers, JOB_CATEGORIES, PROVINCES, WORK_STYLES } from '@/lib/mock-data'
-import { getCurrentUser } from '@/lib/auth-mock'
+import { useSearch } from '@/context/search-context'
+import { useToast } from '@/context/toast-context'
+import { useAuth } from '@/context/auth-context'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { Search, X } from 'lucide-react'
 import { AdvancedSearchModal } from '@/components/search/advanced-search-modal'
 import { analyzeSearchInput, extractCandidateTerms } from '@/lib/search-utils'
 import { incrementCandidateTerm, notifyAdmin } from '@/services/tagDiscoveryService'
-import { ToastContainer } from '@/components/toast'
 import { GridBackground, SeparatorBold } from '@/components/graphic-elements'
 import { RightStatsSidebar } from '@/components/right-stats-sidebar'
 
 export default function SearchPage() {
-  const [searchQuery, setSearchQuery] = useState('')
+  const { 
+    searchQuery: contextSearchQuery, 
+    setSearchQuery: setContextSearchQuery, 
+    selectedCategory: contextSelectedCategory, 
+    setSelectedCategory: setContextSelectedCategory,
+    selectedTags: contextSelectedTags,
+  } = useSearch()
+  const { showToast } = useToast()
+  const { user: authUser } = useAuth()
+  
+  // Local state for search query (synced with context)
+  const [searchQuery, setSearchQuery] = useState(contextSearchQuery)
+  
+  // Sync local search query with context
+  useEffect(() => {
+    setContextSearchQuery(searchQuery)
+  }, [searchQuery, setContextSearchQuery])
+  
+  // Use context category, but keep local state for complex logic
+  const [selectedCategory, setSelectedCategory] = useState(contextSelectedCategory)
+  
+  // Sync category with context
+  useEffect(() => {
+    if (selectedCategory !== contextSelectedCategory) {
+      setContextSelectedCategory(selectedCategory)
+    }
+  }, [selectedCategory, contextSelectedCategory, setContextSelectedCategory])
+  
   // Convert MockFreelancer to User type
   const [freelancers, setFreelancers] = useState(() => 
     mockFreelancers.map(f => ({
@@ -46,12 +74,10 @@ export default function SearchPage() {
   const [manualSelectedTags, setManualSelectedTags] = useState<string[]>([])
   const [autoSelectedTags, setAutoSelectedTags] = useState<string[]>([])
   
-  // Combined selected tags for filtering (manual + auto)
-  const selectedTags = useMemo(() => {
-    return [...manualSelectedTags, ...autoSelectedTags]
-  }, [manualSelectedTags, autoSelectedTags])
-  
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null) // Single category ID
+  // Combined selected tags for filtering (manual + auto + context tags)
+  const allSelectedTags = useMemo(() => {
+    return [...manualSelectedTags, ...autoSelectedTags, ...contextSelectedTags]
+  }, [manualSelectedTags, autoSelectedTags, contextSelectedTags])
   const [selectedProvinces, setSelectedProvinces] = useState<string[]>([])
   const [selectedWorkStyles, setSelectedWorkStyles] = useState<string[]>([])
   const [availableTags, setAvailableTags] = useState<string[]>([])
@@ -59,7 +85,6 @@ export default function SearchPage() {
   const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false)
   const [quoteDescription, setQuoteDescription] = useState('')
   const [loading, setLoading] = useState(false)
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'info' | 'success' | 'warning' | 'error' }>>([])
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null)
   const [isAdvancedSearchOpen, setIsAdvancedSearchOpen] = useState(false)
 
@@ -149,12 +174,7 @@ export default function SearchPage() {
         notifyAdmin(term, count)
         
         // Show toast notification
-        const toastId = `toast-${Date.now()}-${Math.random()}`
-        setToasts(prev => [...prev, {
-          id: toastId,
-          message: `📢 แจ้งเตือน Admin: คำค้นหาใหม่ "${term}" ถูกค้นหา ${count} ครั้งแล้ว!`,
-          type: 'warning'
-        }])
+        showToast(`📢 แจ้งเตือน Admin: คำค้นหาใหม่ "${term}" ถูกค้นหา ${count} ครั้งแล้ว!`, 'warning')
       }
     })
 
@@ -238,9 +258,6 @@ export default function SearchPage() {
     }
   }
 
-  const removeToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
-  }
 
   const handleProvinceClick = (province: string) => {
     setSelectedProvinces(prev => 
@@ -273,13 +290,12 @@ export default function SearchPage() {
   const handleRequestQuote = async () => {
     if (selectedFreelancers.size === 0) return
 
-    const user = getCurrentUser()
-    if (!user) {
-      alert('กรุณาเข้าสู่ระบบก่อน')
+    if (!authUser) {
+      showToast('กรุณาเข้าสู่ระบบก่อน', 'warning')
       return
     }
 
-    alert(`ส่งคำขอใบเสนอราคาไปยัง ${selectedFreelancers.size} ฟรีแลนซ์เรียบร้อยแล้ว (Mock)`)
+    showToast(`ส่งคำขอใบเสนอราคาไปยัง ${selectedFreelancers.size} ฟรีแลนซ์เรียบร้อยแล้ว (Mock)`, 'success')
     setIsQuoteModalOpen(false)
     setQuoteDescription('')
     setSelectedFreelancers(new Set())
@@ -327,16 +343,16 @@ export default function SearchPage() {
 
     // Filter by tags (category tags) - only if no category is selected
     // If category is selected, tags are already filtered by category
-    if (selectedTags.length > 0 && !selectedCategory) {
-      const hasMatchingTag = selectedTags.some(tag => f.skills_tags.includes(tag))
+    if (allSelectedTags.length > 0 && !selectedCategory) {
+      const hasMatchingTag = allSelectedTags.some(tag => f.skills_tags.includes(tag))
       if (!hasMatchingTag) {
         return false
       }
     }
 
     // If both category and tags are selected, freelancer must match both
-    if (selectedTags.length > 0 && selectedCategory) {
-      const hasMatchingTag = selectedTags.some(tag => f.skills_tags.includes(tag))
+    if (allSelectedTags.length > 0 && selectedCategory) {
+      const hasMatchingTag = allSelectedTags.some(tag => f.skills_tags.includes(tag))
       if (!hasMatchingTag) {
         return false
       }
@@ -344,13 +360,12 @@ export default function SearchPage() {
 
     return true
     })
-  }, [freelancers, selectedCategory, selectedProvinces, selectedWorkStyles, selectedTags])
+  }, [freelancers, selectedCategory, selectedProvinces, selectedWorkStyles, allSelectedTags])
 
   return (
     <div className="min-h-screen bg-background relative">
       <GridBackground />
       <Navbar />
-      <ToastContainer toasts={toasts} onRemove={removeToast} />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="mb-6">
@@ -434,7 +449,7 @@ export default function SearchPage() {
             <div className="sticky top-24">
               <SearchSidebar
                 tags={visibleTags}
-                selectedTags={selectedTags}
+                selectedTags={allSelectedTags}
                 selectedCategories={selectedCategory ? [selectedCategory] : []}
                 selectedProvinces={selectedProvinces}
                 selectedWorkStyles={selectedWorkStyles}
@@ -489,7 +504,7 @@ export default function SearchPage() {
                     window.alert("ระบบได้รับความต้องการของคุณแล้ว แอดมินจะรีบจัดหาให้ครับ!")
                     console.log('Admin notification:', {
                       searchQuery,
-                      selectedTags,
+                      selectedTags: allSelectedTags,
                       selectedCategory: selectedCategory,
                       selectedProvinces,
                       selectedWorkStyles,

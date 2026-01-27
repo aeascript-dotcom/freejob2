@@ -6,38 +6,19 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { FontSizeSelector } from '@/components/ui/font-size-selector'
-import { useEffect, useState } from 'react'
-import { getCurrentUser, logout } from '@/lib/auth-mock'
+import { useState } from 'react'
+import { useAuth } from '@/context/auth-context'
 import { AuthModal } from '@/components/auth/auth-modal'
 import { ChevronDown, LogOut } from 'lucide-react'
 
 export function Navbar() {
   const pathname = usePathname()
-  const [user, setUser] = useState<any>(null)
+  const { user, logout: handleLogout, isAuthenticated } = useAuth()
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login')
 
-  useEffect(() => {
-    const checkUser = () => {
-      setUser(getCurrentUser())
-    }
-    
-    checkUser()
-    
-    const handleStorageChange = () => {
-      checkUser()
-    }
-    
-    window.addEventListener('storage', handleStorageChange)
-    // Also listen for custom storage events
-    window.addEventListener('storage', handleStorageChange)
-    return () => {
-      window.removeEventListener('storage', handleStorageChange)
-    }
-  }, [])
-
-  const handleLogout = () => {
-    logout()
+  const handleLogoutClick = async () => {
+    await handleLogout()
     window.location.href = '/'
   }
 
@@ -122,7 +103,7 @@ export function Navbar() {
                 <FontSizeSelector />
               </div>
               
-              {user ? (
+              {isAuthenticated && user ? (
                 <>
                   <Link href="/freelancer/dashboard">
                     <Button
@@ -146,7 +127,7 @@ export function Navbar() {
                     </button>
                     <div className="absolute right-0 top-full mt-2 w-48 bg-zinc-900 border border-white/10 rounded-lg shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
                       <button
-                        onClick={handleLogout}
+                        onClick={handleLogoutClick}
                         className="w-full flex items-center gap-2 px-4 py-2 text-sm text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-lg transition-colors text-thai"
                       >
                         <LogOut className="w-4 h-4" />

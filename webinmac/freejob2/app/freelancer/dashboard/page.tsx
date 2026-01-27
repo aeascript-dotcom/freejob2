@@ -6,27 +6,22 @@ import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
-import { getCurrentUser, logout } from '@/lib/auth-mock'
 import { useFreelancer } from '@/context/freelancer-context'
+import { useAuth } from '@/context/auth-context'
 import { Briefcase, Users, DollarSign, LogOut, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { InsightsSidebar } from '@/components/dashboard/insights-sidebar'
 
 export default function FreelancerDashboard() {
-  const [user, setUser] = useState<any>(null)
+  const { user, logout: handleLogout, isAuthenticated } = useAuth()
   const { currentFreelancer, loading } = useFreelancer()
 
-  useEffect(() => {
-    const currentUser = getCurrentUser()
-    setUser(currentUser)
-  }, [])
-
-  const handleLogout = () => {
-    logout()
+  const handleLogoutClick = async () => {
+    await handleLogout()
     window.location.href = '/'
   }
 
-  if (!user || loading || !currentFreelancer) {
+  if (!isAuthenticated || !user || loading || !currentFreelancer) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-foreground text-thai">กำลังโหลด...</div>
@@ -41,7 +36,7 @@ export default function FreelancerDashboard() {
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-foreground text-thai heading-english">แดชบอร์ดฟรีแลนซ์</h1>
-          <Button onClick={handleLogout} variant="outline" className="text-thai">
+          <Button onClick={handleLogoutClick} variant="outline" className="text-thai">
             <LogOut className="w-4 h-4 mr-2" />
             ออกจากระบบ
           </Button>

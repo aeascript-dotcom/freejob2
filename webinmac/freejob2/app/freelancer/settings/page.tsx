@@ -13,19 +13,19 @@ import { Label } from '@/components/ui/label'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { getCurrentUser } from '@/lib/auth-mock'
 import { PROVINCES } from '@/lib/mock-data'
 import { useFreelancer } from '@/context/freelancer-context'
+import { useAuth } from '@/context/auth-context'
+import { useToast } from '@/context/toast-context'
 import { uploadProfileImage } from '@/lib/freelancer-service'
 import { Upload, X, Loader2, Save } from 'lucide-react'
-import { ToastContainer } from '@/components/toast'
 
 export default function FreelancerSettings() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
+  const { user, isAuthenticated } = useAuth()
   const { currentFreelancer, updateProfile, loading: contextLoading } = useFreelancer()
+  const { showToast } = useToast()
   const [loading, setLoading] = useState(false)
-  const [toasts, setToasts] = useState<Array<{ id: string; message: string; type?: 'info' | 'success' | 'warning' | 'error' }>>([])
   
   // Form state
   const [displayName, setDisplayName] = useState('')
@@ -41,9 +41,6 @@ export default function FreelancerSettings() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    const currentUser = getCurrentUser()
-    setUser(currentUser)
-    
     // Initialize form with current freelancer data from context
     if (currentFreelancer) {
       setDisplayName(currentFreelancer.full_name || '')
@@ -62,8 +59,7 @@ export default function FreelancerSettings() {
 
     // Validate file size (2MB max)
     if (file.size > 2 * 1024 * 1024) {
-      const toastId = Date.now().toString()
-      setToasts([{ id: toastId, message: 'ไฟล์ขนาดเกิน 2MB', type: 'error' }])
+      showToast('ไฟล์ขนาดเกิน 2MB', 'error')
       return
     }
 
@@ -72,12 +68,10 @@ export default function FreelancerSettings() {
       // Use service layer for image upload
       const imageUrl = await uploadProfileImage(file)
       setAvatarUrl(imageUrl)
-      const toastId = Date.now().toString()
-      setToasts([{ id: toastId, message: 'อัปโหลดรูปภาพสำเร็จ', type: 'success' }])
+      showToast('อัปโหลดรูปภาพสำเร็จ', 'success')
     } catch (error) {
       console.error('Error uploading image:', error)
-      const toastId = Date.now().toString()
-      setToasts([{ id: toastId, message: 'เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ', type: 'error' }])
+      showToast('เกิดข้อผิดพลาดในการอัปโหลดรูปภาพ', 'error')
     } finally {
       setLoading(false)
     }
@@ -132,8 +126,7 @@ export default function FreelancerSettings() {
       await new Promise(resolve => setTimeout(resolve, 300))
       
       // Show success toast
-      const toastId = Date.now().toString()
-      setToasts([{ id: toastId, message: 'บันทึกข้อมูลสำเร็จ', type: 'success' }])
+      showToast('บันทึกข้อมูลสำเร็จ', 'success')
       
       // Redirect to dashboard after a short delay
       setTimeout(() => {
@@ -141,18 +134,13 @@ export default function FreelancerSettings() {
       }, 800)
     } catch (error) {
       console.error('Error saving profile:', error)
-      const toastId = Date.now().toString()
-      setToasts([{ id: toastId, message: 'เกิดข้อผิดพลาดในการบันทึก', type: 'error' }])
+      showToast('เกิดข้อผิดพลาดในการบันทึก', 'error')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleRemoveToast = (id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id))
-  }
-
-  if (!user || contextLoading || !currentFreelancer) {
+  if (!isAuthenticated || !user || contextLoading || !currentFreelancer) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-foreground text-thai">กำลังโหลด...</div>
@@ -163,7 +151,6 @@ export default function FreelancerSettings() {
   return (
     <div className="min-h-screen bg-black">
       <Navbar />
-      <ToastContainer toasts={toasts} onRemove={handleRemoveToast} />
       
       <Container className="py-8 max-w-4xl">
         <div className="mb-8 flex items-center justify-between">
