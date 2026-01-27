@@ -14,6 +14,7 @@ const notoSansThai = Noto_Sans_Thai({
   weight: ["400", "500", "600", "700", "800", "900"],
   variable: "--font-noto-sans-thai",
   display: "swap",
+  preload: true, // Main font - preload it
 });
 
 const oswald = Oswald({
@@ -21,6 +22,7 @@ const oswald = Oswald({
   weight: ["400", "500", "600", "700"],
   variable: "--font-oswald",
   display: "swap",
+  preload: false, // Secondary font - don't preload
 });
 
 const anton = Anton({
@@ -28,6 +30,7 @@ const anton = Anton({
   weight: ["400"],
   variable: "--font-anton",
   display: "swap",
+  preload: false, // Secondary font - don't preload
 });
 
 const bebasNeue = Bebas_Neue({
@@ -35,6 +38,7 @@ const bebasNeue = Bebas_Neue({
   weight: ["400"],
   variable: "--font-bebas-neue",
   display: "swap",
+  preload: false, // Secondary font - don't preload
 });
 
 const inter = Inter({
@@ -42,6 +46,7 @@ const inter = Inter({
   weight: ["400", "500", "600", "700"],
   variable: "--font-inter",
   display: "swap",
+  preload: false, // Secondary font - don't preload
 });
 
 const roboto = Roboto({
@@ -49,6 +54,7 @@ const roboto = Roboto({
   weight: ["400", "500", "700"],
   variable: "--font-roboto",
   display: "swap",
+  preload: false, // Secondary font - don't preload
 });
 
 export const metadata: Metadata = {
