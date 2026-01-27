@@ -190,19 +190,14 @@ export default function SearchPage() {
   useEffect(() => {
     const handleThresholdEvent = (event: CustomEvent) => {
       const { term, count } = event.detail
-      const toastId = `toast-${Date.now()}-${Math.random()}`
-      setToasts(prev => [...prev, {
-        id: toastId,
-        message: `📢 แจ้งเตือน Admin: คำค้นหาใหม่ "${term}" ถูกค้นหา ${count} ครั้งแล้ว!`,
-        type: 'warning'
-      }])
+      showToast(`📢 แจ้งเตือน Admin: คำค้นหาใหม่ "${term}" ถูกค้นหา ${count} ครั้งแล้ว!`, 'warning')
     }
 
     window.addEventListener('tag-discovery-threshold', handleThresholdEvent as EventListener)
     return () => {
       window.removeEventListener('tag-discovery-threshold', handleThresholdEvent as EventListener)
     }
-  }, [])
+  }, [showToast])
 
   const handleCategoryClick = (categoryId: string) => {
     setSelectedCategory(prev => {
