@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { Navbar } from '@/components/navbar'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -204,11 +205,13 @@ export default function InsightsPage() {
                     >
                       <div className="flex gap-4">
                         <div className="flex-shrink-0">
-                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted">
-                            <img
+                          <div className="w-20 h-20 rounded-lg overflow-hidden bg-muted relative">
+                            <Image
                               src={news.image}
                               alt={news.headline}
-                              className="w-full h-full object-cover"
+                              fill
+                              className="object-cover"
+                              sizes="80px"
                             />
                           </div>
                         </div>

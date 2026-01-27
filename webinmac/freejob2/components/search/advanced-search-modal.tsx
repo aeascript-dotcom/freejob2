@@ -170,7 +170,7 @@ export function AdvancedSearchModal({
                 })
               ) : (
                 <div className="col-span-full text-center py-8 text-muted-foreground text-thai">
-                  ไม่พบแท็กที่ตรงกับ "{searchQuery}"
+                  ไม่พบแท็กที่ตรงกับ &quot;{searchQuery}&quot;
                 </div>
               )}
             </div>
