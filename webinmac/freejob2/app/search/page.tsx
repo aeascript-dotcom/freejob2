@@ -334,14 +334,27 @@ export default function SearchPage() {
           return false // No matching tags
         }
 
+        // Calculate total relevant tags (excluding work styles and provinces)
+        const totalRelevantTags = relevantTags.length
+        
         // If freelancer has tags from other categories, ensure selected category tags are majority
-        if (otherCategoryTags.length > 0) {
-          const totalRelevantTags = relevantTags.length
+        if (otherCategoryTags.length > 0 && totalRelevantTags > 1) {
           const matchingRatio = matchingCategoryTags.length / totalRelevantTags
           
           // Require: either majority (>=50%) OR at least 2 tags from selected category
+          // This ensures that selected category is the primary skill, not just a secondary service
           if (matchingRatio < 0.5 && matchingCategoryTags.length < 2) {
             return false // Selected category tags are not primary
+          }
+        }
+        
+        // Additional check: If freelancer has only 1-2 relevant tags total, 
+        // at least one must be from selected category (already checked above)
+        // If freelancer has 3+ tags, require at least 2 from selected category OR majority
+        if (totalRelevantTags >= 3 && matchingCategoryTags.length === 1) {
+          // Single tag from selected category but has other category tags = likely not primary
+          if (otherCategoryTags.length > 0) {
+            return false // Only one tag from selected category, but has other category tags
           }
         }
       }
