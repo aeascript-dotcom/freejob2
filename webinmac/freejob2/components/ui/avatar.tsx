@@ -22,14 +22,16 @@ const AvatarImage = React.forwardRef<
   React.ImgHTMLAttributes<HTMLImageElement> & { src?: string; alt?: string }
 >(({ className, alt = '', src, ...props }, ref) => {
   // Use Next.js Image component for better optimization
+  // Note: Next.js Image doesn't support ref, so we ignore it for Image component
   if (src) {
     return (
       <Image
         src={src}
-        alt={alt}
+        alt={alt || ''}
         fill
         className={cn("aspect-square h-full w-full object-cover", className)}
-        sizes="40px"
+        sizes="(max-width: 768px) 40px, 80px"
+        unoptimized={src?.startsWith('data:') || src?.startsWith('blob:')}
         {...(props as any)}
       />
     )
