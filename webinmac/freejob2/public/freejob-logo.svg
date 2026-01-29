@@ -4,6 +4,9 @@
       <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
     </linearGradient>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@600&display=swap');
+    </style>
   </defs>
   
   <!-- Icon squares with animation -->
@@ -25,7 +28,7 @@
   </g>
   
   <!-- Text -->
-  <text x="85" y="55" font-family="Arial, sans-serif" font-size="48" font-weight="700">
+  <text x="85" y="55" font-family="Bitcount Single, Arial, sans-serif" font-size="48" font-weight="600">
     <tspan fill="#667eea">Free</tspan><tspan fill="#764ba2">Job</tspan>
   </text>
 </svg>
