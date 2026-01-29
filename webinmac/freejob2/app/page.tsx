@@ -20,10 +20,10 @@ export default function Home() {
         <div className="text-center mb-16 relative z-10">
           <div className="flex justify-center mb-6">
             <Image
-              src="/freejob2logo.png"
+              src="/freejob-logo.svg"
               alt="Freejob Logo"
               width={300}
-              height={150}
+              height={100}
               priority
               className="object-contain"
               style={{ width: 'auto', height: 'auto' }}

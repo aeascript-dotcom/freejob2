@@ -1,0 +1,31 @@
+<svg width="300" height="100" viewBox="0 0 300 100" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="gradient1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Icon squares with animation -->
+  <g id="icon">
+    <!-- Square 1 (back, most transparent) -->
+    <rect x="40" y="40" width="30" height="30" rx="6" fill="url(#gradient1)" opacity="0.3">
+      <animate attributeName="y" values="40;30;40" dur="3s" repeatCount="indefinite" begin="1s"/>
+    </rect>
+    
+    <!-- Square 2 (middle) -->
+    <rect x="25" y="25" width="30" height="30" rx="6" fill="url(#gradient1)" opacity="0.6">
+      <animate attributeName="y" values="25;15;25" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+    </rect>
+    
+    <!-- Square 3 (front, solid) -->
+    <rect x="10" y="10" width="30" height="30" rx="6" fill="url(#gradient1)" opacity="1">
+      <animate attributeName="y" values="10;0;10" dur="3s" repeatCount="indefinite" begin="0s"/>
+    </rect>
+  </g>
+  
+  <!-- Text -->
+  <text x="85" y="55" font-family="Arial, sans-serif" font-size="48" font-weight="700">
+    <tspan fill="#667eea">Free</tspan><tspan fill="#764ba2">Job</tspan>
+  </text>
+</svg>
