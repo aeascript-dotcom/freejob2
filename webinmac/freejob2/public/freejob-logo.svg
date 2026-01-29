@@ -5,7 +5,13 @@
       <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
     </linearGradient>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Bitcount+Single:wght@600&display=swap');
+      @font-face {
+        font-family: 'Bitcount Single';
+        font-style: normal;
+        font-weight: 600;
+        font-display: swap;
+        src: url('https://fonts.gstatic.com/s/bitcountsingle/v1/bitcountsingle-variable.woff2') format('woff2');
+      }
     </style>
   </defs>
   
