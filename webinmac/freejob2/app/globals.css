@@ -49,6 +49,9 @@
     --destructive-foreground: 0 0% 100%;
     
     --radius: 1.5rem; /* 24px - Rounded rectangles */
+
+    /* LINE branding */
+    --line-green: #06C755;
   }
 
   .dark {

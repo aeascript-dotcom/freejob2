@@ -11,14 +11,17 @@
 ```tsx
 <FontSizeProvider>        // 1. Base - Font size preferences
   <AuthProvider>          // 2. Authentication state
-    <ToastProvider>       // 3. Global notifications
-      <SearchProvider>    // 4. Search & filter state
-        <FreelancerProvider>  // 5. Freelancer profile data
-          {children}
-          <GlobalToastContainer />
-        </FreelancerProvider>
-      </SearchProvider>
-    </ToastProvider>
+    <LineProvider>        // 3. LINE connect & admin chat (needs Auth; triggers toasts)
+      <ToastProvider>     // 4. Global notifications
+        <SearchProvider>  // 5. Search & filter state
+          <FreelancerProvider>  // 6. Freelancer profile data
+            {children}
+            <GlobalToastContainer />
+            <LineToastBridge />
+          </FreelancerProvider>
+        </SearchProvider>
+      </ToastProvider>
+    </LineProvider>
   </AuthProvider>
 </FontSizeProvider>
 ```
@@ -26,6 +29,7 @@
 **เหตุผลในการเรียงลำดับ:**
 - `FontSizeProvider` อยู่ชั้นนอกสุด เพราะเป็น UI preference ที่ไม่ขึ้นกับ business logic
 - `AuthProvider` อยู่ก่อน `FreelancerProvider` เพราะ freelancer data ต้องใช้ auth state
+- `LineProvider` อยู่หลัง `AuthProvider` (ก่อน `ToastProvider`) เพราะ LINE features อาจใช้ auth; ส่ง toast ผ่าน `LineToastBridge` ที่อยู่ใน `ToastProvider`
 - `ToastProvider` อยู่ก่อน `SearchProvider` และ `FreelancerProvider` เพื่อให้ components สามารถแสดง toast ได้
 - `SearchProvider` และ `FreelancerProvider` อยู่ชั้นในสุด เพราะเป็น business logic ที่ซับซ้อน
 
@@ -149,7 +153,37 @@ function MyComponent() {
 
 ---
 
-### 4. SearchContext (`context/search-context.tsx`)
+### 4. LineContext (`context/line-context.tsx`)
+
+**หน้าที่:** LINE connect / disconnect และแชทกับแอดมิน (Mock)
+
+**State:**
+- `isLineConnected`: boolean (sync กับ localStorage `line_connected`)
+- `lineProfile`: `{ displayName, pictureUrl } | null`
+- `adminMessages`: `Array<{ id, text, sender: 'user'|'admin', timestamp }>`
+
+**Actions:**
+- `connectLine()`: เรียก LINE service → อัปเดต state + localStorage → แสดง toast "เชื่อมต่อ LINE สำเร็จ"
+- `disconnectLine()`: ล้าง state และ localStorage
+- `sendMessageToAdmin(text)`: เพิ่มข้อความ user → ส่ง mock → หลัง 2s เพิ่ม auto-reply แอดมิน → แสดง toast "ส่งข้อความแล้ว"
+
+**Toast Bridge:** `LineProvider` อยู่เหนือ `ToastProvider` จึงใช้ custom event `line-toast` และ `<LineToastBridge />` (ภายใน `ToastProvider`) ฟังแล้วเรียก `showToast`
+
+**Usage:**
+```tsx
+import { useLine } from '@/context/line-context'
+
+function LineSettings() {
+  const { isLineConnected, lineProfile, connectLine, disconnectLine, sendMessageToAdmin } = useLine()
+  // ...
+}
+```
+
+**Migration Note:** แทนที่ `lib/line-service` mock ด้วย Supabase / LINE Messaging API
+
+---
+
+### 5. SearchContext (`context/search-context.tsx`)
 
 **หน้าที่:** จัดการ search state (categories, tags, query)
 
@@ -197,7 +231,7 @@ function SearchPage() {
 
 ---
 
-### 5. FreelancerContext (`context/freelancer-context.tsx`)
+### 6. FreelancerContext (`context/freelancer-context.tsx`)
 
 **หน้าที่:** จัดการ freelancer profile data
 

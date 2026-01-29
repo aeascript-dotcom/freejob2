@@ -154,8 +154,7 @@ export function SearchSidebar({
     } else {
       return groupTagsByCategory(categoryTags)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sortMode, categoryTags.length, JSON.stringify(categoryTags)])
+  }, [sortMode, categoryTags])
 
   return (
     <Card className="sticky top-20 h-fit bg-card text-card-foreground card-black">

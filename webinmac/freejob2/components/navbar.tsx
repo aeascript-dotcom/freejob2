@@ -94,6 +94,20 @@ export function Navbar() {
                   )}
                 </button>
               </Link>
+              <Link href="/line">
+                <button
+                  className={`text-thai text-sm font-medium transition-colors relative ${
+                    pathname === '/line'
+                      ? 'text-amber-500'
+                      : 'text-zinc-400 hover:text-amber-500'
+                  }`}
+                >
+                  แชท LINE
+                  {pathname === '/line' && (
+                    <span className="absolute -bottom-1 left-0 right-0 h-0.5 bg-amber-500" />
+                  )}
+                </button>
+              </Link>
             </nav>
 
             {/* Right: User Actions */}

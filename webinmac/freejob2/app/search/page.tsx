@@ -158,19 +158,16 @@ export default function SearchPage() {
 
     // 1. Auto-tag matching - REPLACE (not append) auto-selected tags
     const matchedTags = analyzeSearchInput(inputText)
-    console.log('🔍 Search Input:', inputText)
-    console.log('✅ Matched Tags:', matchedTags)
     
     // CRITICAL FIX: Replace auto-selected tags instead of appending
     setAutoSelectedTags(matchedTags)
-    console.log('✨ Auto-selected tags (replaced):', matchedTags)
 
     // 2. Tag discovery - extract candidate terms
     const candidateTerms = extractCandidateTerms(inputText)
     candidateTerms.forEach(term => {
       const reachedThreshold = incrementCandidateTerm(term)
       if (reachedThreshold) {
-        const count = 3 // TESTING: Change to 50 in production
+        const count = 50 // Threshold for admin notification
         notifyAdmin(term, count)
         
         // Show toast notification
@@ -534,15 +531,7 @@ export default function SearchPage() {
                 </div>
                 <Button
                   onClick={() => {
-                    window.alert("ระบบได้รับความต้องการของคุณแล้ว แอดมินจะรีบจัดหาให้ครับ!")
-                    console.log('Admin notification:', {
-                      searchQuery,
-                      selectedTags: allSelectedTags,
-                      selectedCategory: selectedCategory,
-                      selectedProvinces,
-                      selectedWorkStyles,
-                      timestamp: new Date().toISOString()
-                    })
+                    showToast('ระบบได้รับความต้องการของคุณแล้ว แอดมินจะรีบจัดหาให้ครับ!', 'success')
                   }}
                   variant="outline"
                   className="text-thai"

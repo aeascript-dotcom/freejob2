@@ -4,10 +4,12 @@ import "./globals.css";
 import { MockDataInitializer } from "@/components/mock-data-initializer";
 import { FontSizeProvider } from "@/context/font-size-context";
 import { AuthProvider } from "@/context/auth-context";
+import { LineProvider } from "@/context/line-context";
 import { ToastProvider } from "@/context/toast-context";
 import { SearchProvider } from "@/context/search-context";
 import { FreelancerProvider } from "@/context/freelancer-context";
 import { GlobalToastContainer } from "@/components/ui/global-toast-container";
+import { LineToastBridge } from "@/components/line/line-toast-bridge";
 
 const notoSansThai = Noto_Sans_Thai({
   subsets: ["latin", "thai"],
@@ -78,14 +80,17 @@ export default function RootLayout({
         {/* Context Providers - Order matters for dependencies */}
         <FontSizeProvider>
           <AuthProvider>
-            <ToastProvider>
-              <SearchProvider>
-                <FreelancerProvider>
-                  {children}
-                  <GlobalToastContainer />
-                </FreelancerProvider>
-              </SearchProvider>
-            </ToastProvider>
+            <LineProvider>
+              <ToastProvider>
+                <SearchProvider>
+                  <FreelancerProvider>
+                    {children}
+                    <GlobalToastContainer />
+                    <LineToastBridge />
+                  </FreelancerProvider>
+                </SearchProvider>
+              </ToastProvider>
+            </LineProvider>
           </AuthProvider>
         </FontSizeProvider>
       </body>
