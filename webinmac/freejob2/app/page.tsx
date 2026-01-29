@@ -22,8 +22,8 @@ export default function Home() {
             <Image
               src="/freejob-logo.svg"
               alt="Freejob Logo"
-              width={300}
-              height={100}
+              width={900}
+              height={300}
               priority
               className="object-contain"
               style={{ width: 'auto', height: 'auto' }}
